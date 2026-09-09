@@ -1,28 +1,28 @@
 """Table III: performance across percentile thresholds."""
-# experiments/run_percentile_sweep.py
+
 import sys
 from pathlib import Path
 
-repo_root = Path(__file__).resolve().parent.parent
-poses_dir = repo_root / config.POSES_DIR
-sys.path.insert(0, str(repo_root))
-
-from pathlib import Path
 import numpy as np
 import pandas as pd
-import json
-from sklearn.neighbors import KDTree
+
+repo_root = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(repo_root))
 
 import config
-from core.trajectory_utils import load_trajectory
+
+from core.trajectory_utils import (
+    load_trajectory,
+    segment_trajectory,
+    downsample_trajectory,
+)
 from core.detection import detect_with_percentile
 from evaluation.eval_canonical import score_predictions
 from loop_closure import LoopClosureDetector
-from core.trajectory_utils import segment_trajectory, downsample_trajectory
 
 
 def main():
-    poses_dir = poses_dir
+    poses_dir = repo_root / config.POSES_DIR
     ref_csv = poses_dir / config.BAG3_CSV
     query_csv = poses_dir / config.BAG7_CSV
 
@@ -76,19 +76,48 @@ def main():
     D = detector.compute_distance_matrix(segments_7, segments_3)
     print(f"Distance matrix shape: {D.shape}")
 
-    # Segment centers for ground truth
-    ref_centers = np.array([seg.mean(axis=0) for seg in segments_3])
-    query_centers = np.array([seg.mean(axis=0) for seg in segments_7])
+    # Load canonical ground truth
+    gt_path = (
+        repo_root
+        / "ground_truth"
+        / "files"
+        / f"gt_{config.DATASET_SHORT}_2.0m.csv"
+    )
 
-    tree = KDTree(ref_centers)
-    dists, _ = tree.query(query_centers, k=1)
-    dists = dists[:, 0]
+    if not gt_path.exists():
+        raise FileNotFoundError(
+            f"Canonical ground-truth file not found: {gt_path}"
+        )
 
-    # Fixed tolerance (primary evaluation tolerance)
-    tolerance = config.SPATIAL_TOLERANCE  # 2.0 m
-    y_true = (dists <= tolerance).astype(int)
+    gt_df = pd.read_csv(gt_path)
 
-    print(f"Positive segments at {tolerance:.1f} m: {y_true.sum()} / {len(y_true)}")
+    required_columns = {
+        "query_index",
+        "nearest_ref_index",
+        "nearest_distance_m",
+        "label",
+    }
+
+    missing = required_columns - set(gt_df.columns)
+
+    if missing:
+        raise ValueError(
+            f"Ground-truth file is missing columns: {sorted(missing)}"
+        )
+
+    y_true = gt_df["label"].to_numpy(dtype=int)
+
+    if len(y_true) != len(segments_7):
+        raise ValueError(
+            f"GT/query segment mismatch: "
+            f"{len(y_true)} GT labels vs "
+            f"{len(segments_7)} query segments."
+        )
+
+    print(
+        f"Canonical GT positives: "
+        f"{y_true.sum()} / {len(y_true)}"
+    )
 
     # Sweep percentiles
     percentiles = config.PERCENTILE_SWEEP  # [1, 5, 10, 20, 50]
