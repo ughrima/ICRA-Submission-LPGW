@@ -11,8 +11,6 @@ venv/
 
 # Experiment outputs
 cache/
-results/
-figures/
 
 # Large dataset files
 *.bag
