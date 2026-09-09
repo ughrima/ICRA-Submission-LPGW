@@ -1,6 +1,5 @@
 # Generated artifacts — do not commit
 cache/
-results/
 
 # Python
 __pycache__/
