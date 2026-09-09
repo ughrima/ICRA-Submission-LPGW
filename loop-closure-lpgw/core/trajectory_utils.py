@@ -101,3 +101,87 @@ def resample_to_target_points(
     )
 
     return df.iloc[indices].reset_index(drop=True)
+
+def segment_trajectory(
+    traj,
+    segment_length=3.0,
+    fps=10,
+    stride=1.0,
+):
+    """
+    Segment a trajectory into overlapping windows.
+
+    Parameters
+    ----------
+    traj : np.ndarray
+        Trajectory array of shape (N, 3).
+    segment_length : float
+        Segment duration in seconds.
+    fps : float
+        Sampling frequency.
+    stride : float
+        Distance between consecutive segment starts in seconds.
+
+    Returns
+    -------
+    list[np.ndarray]
+        List of trajectory segments.
+    """
+    if len(traj) < 1:
+        raise ValueError("Trajectory cannot be empty.")
+
+    num_points = int(segment_length * fps)
+    stride_pts = int(stride * fps)
+
+    if num_points <= 0:
+        raise ValueError("segment_length * fps must be greater than zero.")
+
+    if stride_pts <= 0:
+        raise ValueError("stride * fps must be greater than zero.")
+
+    segments = []
+
+    for start in range(
+        0,
+        len(traj) - num_points + 1,
+        stride_pts,
+    ):
+        segment = traj[start:start + num_points]
+
+        if segment.shape[0] == num_points:
+            segments.append(np.array(segment))
+
+    return segments
+
+
+def downsample_trajectory(
+    traj,
+    target_points=1000,
+):
+    """
+    Uniformly downsample a trajectory.
+
+    If the trajectory already contains fewer than or equal
+    to target_points samples, it is returned unchanged.
+    """
+    if target_points <= 0:
+        raise ValueError(
+            "target_points must be greater than zero."
+        )
+
+    if traj.shape[0] == 0:
+        raise ValueError(
+            "Cannot downsample an empty trajectory."
+        )
+
+    if traj.shape[0] <= target_points:
+        return traj
+
+    indices = np.linspace(
+        0,
+        traj.shape[0] - 1,
+        target_points,
+        dtype=int,
+    )
+
+    return traj[indices]

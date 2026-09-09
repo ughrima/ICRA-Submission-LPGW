@@ -21,13 +21,12 @@ Important:
 
 All shared settings come from config.py.
 """
-
 import sys
 from pathlib import Path
 import numpy as np
 
-repo_root = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(repo_root))
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(PROJECT_ROOT))
 
 from pathlib import Path
 import time
@@ -40,7 +39,7 @@ from core.trajectory_utils import load_trajectory
 from core.detection import detect_with_percentile
 from evaluation.eval_canonical import score_predictions
 from loop_closure import LoopClosureDetector
-from lpgw_impl import segment_trajectory, downsample_trajectory
+from core.trajectory_utils import segment_trajectory, downsample_trajectory
 
 import pandas as pd
 
@@ -92,7 +91,8 @@ def load_canonical_ground_truth(num_query_segments):
     """
 
     gt_path = (
-        Path("ground_truth")
+        PROJECT_ROOT
+        / "ground_truth"
         / "files"
         / (
             f"gt_{config.DATASET_SHORT}_"
@@ -172,51 +172,55 @@ def load_canonical_ground_truth(num_query_segments):
 # ============================================================
 # DTW
 # ============================================================
-
-def dtw_distance(seq1, seq2):
+def dtw_distance(A, B, window=None):
     """
-    Standard dynamic time warping distance between two 3D curves.
-    """
+    Exact Dynamic Time Warping distance with an optional
+    Sakoe-Chiba warping window.
 
-    n = len(seq1)
-    m = len(seq2)
+    Parameters
+    ----------
+    A, B : np.ndarray
+        Trajectories of shape (N, 3) and (M, 3).
+    window : int or None
+        Maximum allowed index difference |i-j|.
+        None = unconstrained DTW.
+    """
+    n = len(A)
+    m = len(B)
 
     if n == 0 or m == 0:
         return np.inf
 
-    cost = np.full(
-        (n + 1, m + 1),
-        np.inf,
-        dtype=float,
-    )
+    # If no window is specified, allow full warping.
+    if window is None:
+        window = max(n, m)
 
+    # Window must be large enough to make the endpoints reachable.
+    window = max(window, abs(n - m))
+
+    cost = np.full((n + 1, m + 1), np.inf, dtype=np.float64)
     cost[0, 0] = 0.0
 
     for i in range(1, n + 1):
-        for j in range(1, m + 1):
+        j_start = max(1, i - window)
+        j_end = min(m, i + window)
 
-            d = np.linalg.norm(
-                seq1[i - 1] - seq2[j - 1]
-            )
+        for j in range(j_start, j_end + 1):
+            d = np.linalg.norm(A[i - 1] - B[j - 1])
 
             cost[i, j] = d + min(
-                cost[i - 1, j],
-                cost[i, j - 1],
-                cost[i - 1, j - 1],
+                cost[i - 1, j],      # insertion
+                cost[i, j - 1],      # deletion
+                cost[i - 1, j - 1],  # match
             )
 
     return cost[n, m]
-
-
-def compute_dtw_matrix(query_segments, reference_segments):
+def compute_dtw_matrix(query_segments, reference_segments, window=None):
     """
     Compute complete DTW distance matrix.
 
     Shape:
         [N_query, N_reference]
-
-    D[i, j] =
-        DTW(query_segments[i], reference_segments[j])
     """
 
     n_query = len(query_segments)
@@ -244,11 +248,10 @@ def compute_dtw_matrix(query_segments, reference_segments):
             D[i, j] = dtw_distance(
                 query_segments[i],
                 reference_segments[j],
+                window=window,
             )
 
     return D
-
-
 # ============================================================
 # Discrete Frechet
 # ============================================================
@@ -596,12 +599,14 @@ def main():
     print("\nLoading trajectories...")
 
     reference_path = (
-        Path(config.POSES_DIR)
-        / config.BAG3_CSV
+    PROJECT_ROOT
+    / config.POSES_DIR
+    / config.BAG3_CSV
     )
 
     query_path = (
-        Path(config.POSES_DIR)
+        PROJECT_ROOT
+        / config.POSES_DIR
         / config.BAG7_CSV
     )
 
@@ -977,9 +982,12 @@ def main():
 
     start_time = time.perf_counter()
 
+    DTW_WINDOW = 10
+
     D_dtw = compute_dtw_matrix(
         query_baseline_segments,
         reference_baseline_segments,
+        window=DTW_WINDOW,
     )
 
     dtw_time = (

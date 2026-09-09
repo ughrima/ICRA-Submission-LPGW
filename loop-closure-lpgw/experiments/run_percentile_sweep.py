@@ -17,7 +17,7 @@ from core.trajectory_utils import load_trajectory
 from core.detection import detect_with_percentile
 from evaluation.eval_canonical import score_predictions
 from loop_closure import LoopClosureDetector
-from lpgw_impl import segment_trajectory, downsample_trajectory
+from core.trajectory_utils import segment_trajectory, downsample_trajectory
 
 
 def main():

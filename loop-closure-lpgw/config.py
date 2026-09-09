@@ -7,7 +7,7 @@ Do NOT hardcode segment length, stride, percentile, or tolerance elsewhere.
 
 # ----------------- Dataset selection -----------------
 
-ACTIVE_DATASET = "kitti"  # choose: "uzh_fpv" or "kitti"
+ACTIVE_DATASET = "uzh_fpv"  # choose: "uzh_fpv" or "kitti"
 
 DATASETS = {
     "uzh_fpv": {

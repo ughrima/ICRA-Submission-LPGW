@@ -46,10 +46,8 @@ import config
 
 from core.trajectory_utils import load_trajectory
 from loop_closure import LoopClosureDetector
-from lpgw_impl import (
-    segment_trajectory,
-    downsample_trajectory,
-)
+from core.trajectory_utils import segment_trajectory, downsample_trajectory
+
 
 
 # ---------------------------------------------------------------------

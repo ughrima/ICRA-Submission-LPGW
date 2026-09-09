@@ -34,7 +34,7 @@ from core.trajectory_utils import load_trajectory
 from core.detection import detect_with_percentile
 from evaluation.eval_canonical import score_predictions
 from loop_closure import LoopClosureDetector
-from lpgw_impl import segment_trajectory, downsample_trajectory
+from core.trajectory_utils import segment_trajectory, downsample_trajectory
 
 def load_canonical_ground_truth(tolerance_m: float):
     gt_dir = repo_root / "ground_truth" / "files"

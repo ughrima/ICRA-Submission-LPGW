@@ -34,7 +34,7 @@ from core.detection import detect_with_percentile
 from evaluation.eval_canonical import score_predictions
 from experiments.run_baseline_comparison import compute_dtw_matrix
 from loop_closure import LoopClosureDetector
-from lpgw_impl import segment_trajectory, downsample_trajectory
+from core.trajectory_utils import segment_trajectory, downsample_trajectory
 
 
 RANDOM_SEED = getattr(config, "RANDOM_SEED", 42)
