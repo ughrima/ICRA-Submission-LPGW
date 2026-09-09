@@ -1,0 +1,18 @@
+# Generated artifacts — do not commit
+cache/
+results/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+dist/
+build/
+.venv/
+venv/
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
