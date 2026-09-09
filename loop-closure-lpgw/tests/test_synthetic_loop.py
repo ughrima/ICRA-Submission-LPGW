@@ -163,7 +163,7 @@ def main():
         stride=1.0,
         lambdaa=0.5,
         downsample_points=None,
-        reference_strategy="first",
+        reference_strategy="robust",
     )
 
     # --------------------------------------------------------

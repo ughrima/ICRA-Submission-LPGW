@@ -34,6 +34,7 @@ import pandas as pd
 # ---------------------------------------------------------------------
 
 repo_root = Path(__file__).resolve().parent.parent
+poses_dir = repo_root / config.POSES_DIR
 sys.path.insert(0, str(repo_root))
 
 
@@ -46,7 +47,7 @@ import config
 from core.trajectory_utils import load_trajectory
 from evaluation.eval_canonical import score_predictions
 from loop_closure import LoopClosureDetector
-from lpgw_impl import segment_trajectory, downsample_trajectory
+from core.trajectory_util import segment_trajectory, downsample_trajectory
 
 
 # Candidate percentile values used for threshold selection.

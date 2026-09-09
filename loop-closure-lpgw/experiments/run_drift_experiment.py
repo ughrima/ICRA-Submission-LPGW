@@ -57,7 +57,7 @@ from loop_closure import LoopClosureDetector
 from core.trajectory_utils import segment_trajectory, downsample_trajectory
 
 from experiments.run_baseline_comparison import compute_dtw_matrix
-from experiments.run_simple_lpgw_test import load_canonical_ground_truth
+from experiments.run_baseline_comparison import compute_dtw_matrix
 
 
 # ---------------------------------------------------------------------
@@ -162,6 +162,53 @@ def select_baseline_segments(
 
     return selected_segments, indices
 
+def load_canonical_ground_truth(num_query_segments):
+    gt_path = (
+        repo_root
+        / "ground_truth"
+        / "files"
+        / f"gt_{config.DATASET_SHORT}_{config.SPATIAL_TOLERANCE}m.csv"
+    )
+
+    if not gt_path.exists():
+        raise FileNotFoundError(
+            f"Canonical ground-truth file not found: {gt_path}"
+        )
+
+    gt_df = pd.read_csv(gt_path)
+
+    required_columns = {
+        "query_index",
+        "nearest_ref_index",
+        "nearest_distance_m",
+        "label",
+    }
+
+    missing = required_columns - set(gt_df.columns)
+
+    if missing:
+        raise ValueError(
+            f"Ground-truth file is missing columns: {sorted(missing)}"
+        )
+
+    if len(gt_df) != num_query_segments:
+        raise ValueError(
+            "Canonical GT/query segment count mismatch: "
+            f"GT has {len(gt_df)} rows, "
+            f"but the experiment has {num_query_segments} "
+            "query segments."
+        )
+
+    query_indices = gt_df["query_index"].to_numpy()
+    expected_indices = np.arange(num_query_segments)
+
+    if not np.array_equal(query_indices, expected_indices):
+        raise ValueError(
+            "Canonical GT query_index values are not consecutive "
+            "from 0 to num_query_segments - 1."
+        )
+
+    return gt_df["label"].to_numpy(dtype=int)
 
 # ---------------------------------------------------------------------
 # Main experiment
@@ -303,12 +350,8 @@ def run_drift_experiment():
     # This GT stays fixed for every noise level.
     # -----------------------------------------------------------------
 
-    y_true_clean, clean_distances, clean_nearest_indices = (
-        compute_center_gt(
-            reference_segments_clean,
-            query_segments_clean,
-            tolerance,
-        )
+    y_true_clean = load_canonical_ground_truth(
+        len(query_segments_clean)
     )
 
     print(
@@ -534,7 +577,7 @@ def run_drift_experiment():
 
     results_df = pd.DataFrame(rows)
 
-    out_dir = Path("results")
+    out_dir = repo_root / "results"
     out_dir.mkdir(
         exist_ok=True
     )

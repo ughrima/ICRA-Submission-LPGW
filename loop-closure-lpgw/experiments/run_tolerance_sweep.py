@@ -13,6 +13,7 @@ import pandas as pd
 # ---------------------------------------------------------------------
 
 repo_root = Path(__file__).resolve().parent.parent
+poses_dir = repo_root / config.POSES_DIR
 sys.path.insert(0, str(repo_root))
 
 import config
@@ -235,7 +236,7 @@ def main():
         stride=config.STRIDE,
         lambdaa=config.LPGW_LAMBDA,
         downsample_points=config.TARGET_POINTS,
-        reference_strategy="first",
+        reference_strategy="robust",
     )
 
     print("\nComputing LPGW distance matrix...")

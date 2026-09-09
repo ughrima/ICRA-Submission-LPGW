@@ -4,7 +4,7 @@ Canonical ground-truth generator.
 
 Uses the SAME segmentation as all LPGW experiments:
   - Downsample to config.TARGET_POINTS
-  - Segment via lpgw_impl.segment_trajectory
+  - Segment via core.trajectory_utils.segment_trajectory
   - Build GT by nearest reference segment center
   - Save labels + segment metadata so any future script can verify alignment.
 
@@ -26,7 +26,7 @@ import json
 
 import config
 from core.trajectory_utils import load_trajectory
-from lpgw_impl import segment_trajectory, downsample_trajectory
+from core.trajectory_utils import segment_trajectory, downsample_trajectory
 
 
 def generate_canonical_ground_truth(

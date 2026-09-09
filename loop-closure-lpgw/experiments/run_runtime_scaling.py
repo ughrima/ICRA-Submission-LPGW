@@ -35,6 +35,7 @@ import pandas as pd
 # ---------------------------------------------------------------------
 
 repo_root = Path(__file__).resolve().parent.parent
+poses_dir = repo_root / config.POSES_DIR
 sys.path.insert(0, str(repo_root))
 
 
@@ -386,7 +387,7 @@ def run_runtime_scaling():
         rows
     )
 
-    out_dir = Path("results")
+    out_dir = repo_root/"results"
     out_dir.mkdir(
         exist_ok=True
     )

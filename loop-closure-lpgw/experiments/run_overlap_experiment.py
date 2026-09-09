@@ -25,6 +25,7 @@ import numpy as np
 import pandas as pd
 
 repo_root = Path(__file__).resolve().parent.parent
+poses_dir = repo_root / config.POSES_DIR
 sys.path.insert(0, str(repo_root))
 
 import config
@@ -352,7 +353,7 @@ def run_overlap_experiment():
             stride=config.STRIDE,
             lambdaa=config.LPGW_LAMBDA,
             downsample_points=config.TARGET_POINTS,
-            reference_strategy="first",
+            reference_strategy="robust",
         )
 
         D_lpgw = detector.compute_distance_matrix(

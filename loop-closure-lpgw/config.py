@@ -86,3 +86,5 @@ DEFAULT_POSE_TOPIC = "/groundtruth/pose"
 #   "subsample_fixed" -> subsample to MAX_BASELINE_SEGMENTS segments
 BASELINE_SEGMENT_POLICY = "subsample_fixed"
 MAX_BASELINE_SEGMENTS = 150  # used only if BASELINE_SEGMENT_POLICY == "subsample_fixed"
+
+REFERENCE_STRATEGY = "robust"

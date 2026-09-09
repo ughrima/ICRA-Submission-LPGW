@@ -26,8 +26,8 @@ from core.trajectory_utils import (
 )
 
 from loop_closure import LoopClosureDetector
-from core.trajectory_utils import segment_trajectory, downsample_trajectory
-
+repo_root = Path(__file__).resolve().parent.parent
+poses_dir = repo_root / config.POSES_DIR
 
 # ------------------------------------------------------------------
 # Canonical ground truth
@@ -271,7 +271,7 @@ def main():
             0.5,
         ),
         downsample_points=100,
-        reference_strategy="first",
+        reference_strategy="robust",
     )
 
     print(

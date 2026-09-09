@@ -44,7 +44,7 @@ import config
 
 from core.trajectory_utils import load_trajectory
 from loop_closure import LoopClosureDetector
-from lpgw_impl import segment_trajectory, downsample_trajectory
+from core.trajectory_utils import segment_trajectory, downsample_trajectory
 
 
 # ============================================================
@@ -475,7 +475,7 @@ def main():
         stride=config.STRIDE,
         lambdaa=config.LPGW_LAMBDA,
         downsample_points=config.TARGET_POINTS,
-        reference_strategy="first",
+        reference_strategy="robust",
     )
 
     print("LPGW detector initialized.")

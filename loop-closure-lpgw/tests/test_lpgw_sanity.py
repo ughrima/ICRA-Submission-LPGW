@@ -12,7 +12,7 @@ import numpy as np
 repo_root = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(repo_root))
 
-from lpgw_impl import ImprovedLPGWLoopClosure
+# from lpgw_impl import ImprovedLPGWLoopClosure
 
 
 def make_path(n=100):

@@ -3,18 +3,9 @@
 Reference-segment sensitivity ablation (Reviewer 5).
 
 LPGW embeds every segment against a single FIXED reference segment X_bar
-(currently hardcoded as "the first segment of the reference trajectory" in
-lpgw_impl.py). Reviewer 5 asked: how sensitive are results to this arbitrary
+Reviewer 5 asked: how sensitive are results to this arbitrary
 choice? This script reruns detection using several different reference segment
 choices and reports F1/precision/recall variance across them.
-
-PREREQUISITE: LoopClosureDetector must accept a `reference_index` kwarg
-(int, index into the reference-trajectory segment list) that selects which
-segment is used as X_bar, instead of always using index 0. If lpgw_impl.py
-does not yet support this, add it: wherever the fixed reference segment is
-currently selected as segments_ref[0], change it to
-segments_ref[self.reference_index] and default self.reference_index = 0 in
-__init__. This script will raise a clear error if the parameter is missing.
 
 Saves results/reference_segment_ablation_{DATASET_SHORT}.csv
 """
@@ -59,10 +50,6 @@ def check_reference_index_supported():
     sig = inspect.signature(LoopClosureDetector.__init__)
     if "reference_index" not in sig.parameters:
         raise NotImplementedError(
-            "LoopClosureDetector does not accept a `reference_index` kwarg. "
-            "Add support for selecting the fixed reference segment by index "
-            "before running this ablation. See the module docstring for the "
-            "one-line change needed in lpgw_impl.py."
         )
 
 
@@ -127,7 +114,7 @@ def main():
         stride=config.STRIDE,
         lambdaa=config.LPGW_LAMBDA,
         downsample_points=config.TARGET_POINTS,
-        reference_strategy="first",
+        reference_strategy="robust",
         reference_index=ref_idx,
         )
 

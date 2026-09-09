@@ -4,6 +4,7 @@ import sys
 from pathlib import Path
 
 repo_root = Path(__file__).resolve().parent.parent
+poses_dir = repo_root / config.POSES_DIR
 sys.path.insert(0, str(repo_root))
 
 from pathlib import Path
@@ -21,7 +22,7 @@ from core.trajectory_utils import segment_trajectory, downsample_trajectory
 
 
 def main():
-    poses_dir = Path("data/poses")
+    poses_dir = poses_dir
     ref_csv = poses_dir / config.BAG3_CSV
     query_csv = poses_dir / config.BAG7_CSV
 
@@ -115,7 +116,7 @@ def main():
         )
 
     results_df = pd.DataFrame(rows)
-    out_dir = Path("results")
+    out_dir = repo_root / "results"
     out_dir.mkdir(exist_ok=True)
     out_path = out_dir / "percentile_sweep.csv"
     results_df.to_csv(out_path, index=False)
