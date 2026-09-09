@@ -62,7 +62,7 @@ def load_canonical_ground_truth(num_query_segments):
     """
 
     gt_path = (
-        Path("ground_truth")
+        repo_root / "ground_truth"
         / "files"
         / (
             f"gt_{config.DATASET_SHORT}_"

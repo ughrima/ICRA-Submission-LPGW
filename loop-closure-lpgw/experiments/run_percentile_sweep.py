@@ -1,10 +1,24 @@
-"""Table III: performance across percentile thresholds."""
+
+"""
+Table III: performance across percentile thresholds.
+
+The LPGW distance matrix is computed once.
+
+Canonical ground truth is loaded from:
+    ground_truth/files/gt_<dataset>_2.0m.csv
+
+Only the detection percentile changes across the sweep.
+"""
 
 import sys
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
+
+# ---------------------------------------------------------------------
+# Project root
+# ---------------------------------------------------------------------
 
 repo_root = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(repo_root))
@@ -22,61 +36,73 @@ from loop_closure import LoopClosureDetector
 
 
 def main():
+    # -----------------------------------------------------------------
+    # Paths
+    # -----------------------------------------------------------------
+
     poses_dir = repo_root / config.POSES_DIR
+
     ref_csv = poses_dir / config.BAG3_CSV
     query_csv = poses_dir / config.BAG7_CSV
 
+    # -----------------------------------------------------------------
     # Load trajectories
+    # -----------------------------------------------------------------
+
     ref_df = load_trajectory(ref_csv)
     query_df = load_trajectory(query_csv)
 
     ref_xyz = ref_df[["PosX", "PosY", "PosZ"]].to_numpy()
     query_xyz = query_df[["PosX", "PosY", "PosZ"]].to_numpy()
 
-    # Downsample and segment (same as simple test)
-    target_points = getattr(config, "TARGET_POINTS", 5000)
-    segment_length = getattr(config, "SEGMENT_LENGTH", 5.0)
-    fps = getattr(config, "FPS", 10)
-    stride = getattr(config, "STRIDE", 1.0)
+    # -----------------------------------------------------------------
+    # Canonical preprocessing
+    # -----------------------------------------------------------------
 
-    ref_xyz_ds = downsample_trajectory(ref_xyz, target_points)
-    query_xyz_ds = downsample_trajectory(query_xyz, target_points)
+    target_points = config.TARGET_POINTS
+    segment_length = config.SEGMENT_LENGTH
+    fps = config.FPS
+    stride = config.STRIDE
 
-    segments_3 = segment_trajectory(
+    ref_xyz_ds = downsample_trajectory(
+        ref_xyz,
+        target_points,
+    )
+
+    query_xyz_ds = downsample_trajectory(
+        query_xyz,
+        target_points,
+    )
+
+    segments_ref = segment_trajectory(
         ref_xyz_ds,
         segment_length=segment_length,
         fps=fps,
         stride=stride,
     )
-    segments_7 = segment_trajectory(
+
+    segments_query = segment_trajectory(
         query_xyz_ds,
         segment_length=segment_length,
         fps=fps,
         stride=stride,
     )
 
-    # Match segment counts
-    min_len = min(len(segments_7), len(segments_3))
-    segments_7 = segments_7[:min_len]
-    segments_3 = segments_3[:min_len]
+    # Match the same segment subset used by the canonical GT generator.
+    min_len = min(
+        len(segments_ref),
+        len(segments_query),
+    )
+
+    segments_ref = segments_ref[:min_len]
+    segments_query = segments_query[:min_len]
 
     print(f"Using {min_len} matched segments for LPGW")
 
-    # Precompute LPGW matrix once
-    detector = LoopClosureDetector( 
-        segment_length=segment_length,
-        fps=fps,
-        stride=stride,
-        lambdaa=config.LPGW_LAMBDA,
-        downsample_points=100,
-        reference_strategy="robust",
-    )
-
-    print("Computing LPGW distance matrix...")
-    D = detector.compute_distance_matrix(segments_7, segments_3)
-    print(f"Distance matrix shape: {D.shape}")
-
+    # -----------------------------------------------------------------
     # Load canonical ground truth
+    # -----------------------------------------------------------------
+
     gt_path = (
         repo_root
         / "ground_truth"
@@ -86,7 +112,9 @@ def main():
 
     if not gt_path.exists():
         raise FileNotFoundError(
-            f"Canonical ground-truth file not found: {gt_path}"
+            f"Canonical ground-truth file not found:\n{gt_path}\n\n"
+            "Generate it first with:\n"
+            "python ground_truth/generate_ground_truth.py"
         )
 
     gt_df = pd.read_csv(gt_path)
@@ -102,16 +130,17 @@ def main():
 
     if missing:
         raise ValueError(
-            f"Ground-truth file is missing columns: {sorted(missing)}"
+            "Ground-truth file is missing columns: "
+            f"{sorted(missing)}"
         )
 
     y_true = gt_df["label"].to_numpy(dtype=int)
 
-    if len(y_true) != len(segments_7):
+    if len(y_true) != len(segments_query):
         raise ValueError(
-            f"GT/query segment mismatch: "
+            "GT/query segment mismatch: "
             f"{len(y_true)} GT labels vs "
-            f"{len(segments_7)} query segments."
+            f"{len(segments_query)} query segments."
         )
 
     print(
@@ -119,17 +148,50 @@ def main():
         f"{y_true.sum()} / {len(y_true)}"
     )
 
+    # -----------------------------------------------------------------
+    # Compute LPGW distance matrix ONCE
+    # -----------------------------------------------------------------
+
+    detector = LoopClosureDetector(
+        segment_length=segment_length,
+        fps=fps,
+        stride=stride,
+        lambdaa=config.LPGW_LAMBDA,
+        downsample_points=100,
+        reference_strategy="robust",
+    )
+
+    print("Computing LPGW distance matrix...")
+
+    D = detector.compute_distance_matrix(
+        segments_query,
+        segments_ref,
+    )
+
+    print(f"Distance matrix shape: {D.shape}")
+
+    # -----------------------------------------------------------------
     # Sweep percentiles
-    percentiles = config.PERCENTILE_SWEEP  # [1, 5, 10, 20, 50]
+    # -----------------------------------------------------------------
+
+    percentiles = config.PERCENTILE_SWEEP
+
     rows = []
 
-    for p in percentiles:
-        y_pred, tau = detect_with_percentile(D, p)
-        metrics = score_predictions(y_true, y_pred)
+    for percentile in percentiles:
+        y_pred, threshold = detect_with_percentile(
+            D,
+            percentile,
+        )
+
+        metrics = score_predictions(
+            y_true,
+            y_pred,
+        )
 
         row = {
-            "percentile": p,
-            "threshold_tau": tau,
+            "percentile": percentile,
+            "threshold_tau": threshold,
             "tp": metrics["tp"],
             "fp": metrics["fp"],
             "fn": metrics["fn"],
@@ -138,17 +200,33 @@ def main():
             "recall": metrics["recall"],
             "f1": metrics["f1"],
         }
+
         rows.append(row)
+
         print(
-            f"p={p:2d}% → tau={tau:.6f}, "
-            f"F1={metrics['f1']:.3f}, P={metrics['precision']:.3f}, R={metrics['recall']:.3f}"
+            f"p={percentile:2d}% → "
+            f"tau={threshold:.6f}, "
+            f"F1={metrics['f1']:.3f}, "
+            f"P={metrics['precision']:.3f}, "
+            f"R={metrics['recall']:.3f}"
         )
 
+    # -----------------------------------------------------------------
+    # Save results
+    # -----------------------------------------------------------------
+
     results_df = pd.DataFrame(rows)
+
     out_dir = repo_root / "results"
-    out_dir.mkdir(exist_ok=True)
+    out_dir.mkdir(parents=True, exist_ok=True)
+
     out_path = out_dir / "percentile_sweep.csv"
-    results_df.to_csv(out_path, index=False)
+
+    results_df.to_csv(
+        out_path,
+        index=False,
+    )
+
     print(f"Percentile sweep saved to {out_path}")
 
 

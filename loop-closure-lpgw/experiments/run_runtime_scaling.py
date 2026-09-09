@@ -117,7 +117,7 @@ def select_evenly_spaced(
 
 def run_runtime_scaling():
 
-    poses_dir = Path("data/poses")
+    poses_dir = repo_root / config.POSES_DIR
 
     ref_csv = poses_dir / config.BAG3_CSV
     query_csv = poses_dir / config.BAG7_CSV

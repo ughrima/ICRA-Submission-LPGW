@@ -60,7 +60,7 @@ GT_SEGMENT_CENTER_THRESHOLD = 0.5  # meters
 
 # ----------------- LPGW -----------------
 
-# Matches ImprovedLPGWLoopClosure(lambdaa=0.5, partial=True) in old pipeline/lpgw_main.py
+# Canonical LPGW configuration
 LPGW_LAMBDA = 0.5
 
 
