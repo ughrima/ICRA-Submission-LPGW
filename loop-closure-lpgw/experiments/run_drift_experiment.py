@@ -216,7 +216,7 @@ def load_canonical_ground_truth(num_query_segments):
 
 def run_drift_experiment():
 
-    poses_dir = Path("data/poses")
+    poses_dir = repo_root / "data" / "poses"
 
     ref_csv = poses_dir / config.BAG3_CSV
     query_csv = poses_dir / config.BAG7_CSV

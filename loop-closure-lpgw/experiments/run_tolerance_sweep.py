@@ -1,6 +1,4 @@
 
-# experiments/run_tolerance_sweep.py
-
 import sys
 import json
 from pathlib import Path
@@ -13,16 +11,22 @@ import pandas as pd
 # ---------------------------------------------------------------------
 
 repo_root = Path(__file__).resolve().parent.parent
-poses_dir = repo_root / config.POSES_DIR
 sys.path.insert(0, str(repo_root))
 
 import config
 
-from core.trajectory_utils import load_trajectory
+# ---------------------------------------------------------------------
+# Project imports
+# ---------------------------------------------------------------------
+
+from core.trajectory_utils import (
+    load_trajectory,
+    segment_trajectory,
+    downsample_trajectory,
+)
 from core.detection import detect_with_percentile
 from evaluation.eval_canonical import score_predictions
 from loop_closure import LoopClosureDetector
-from core.trajectory_utils import segment_trajectory, downsample_trajectory
 
 
 # ---------------------------------------------------------------------

@@ -20,23 +20,35 @@ Saves:
 import sys
 from pathlib import Path
 
+import sys
 import json
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 
+# ---------------------------------------------------------------------
+# Make project root importable
+# ---------------------------------------------------------------------
+
 repo_root = Path(__file__).resolve().parent.parent
-poses_dir = repo_root / config.POSES_DIR
 sys.path.insert(0, str(repo_root))
 
 import config
 
-from core.trajectory_utils import load_trajectory
+# ---------------------------------------------------------------------
+# Project imports
+# ---------------------------------------------------------------------
+
+from core.trajectory_utils import (
+    load_trajectory,
+    segment_trajectory,
+    downsample_trajectory,
+)
 from core.detection import detect_with_percentile
 from evaluation.eval_canonical import score_predictions
-from experiments.run_baseline_comparison import compute_dtw_matrix
 from loop_closure import LoopClosureDetector
-from core.trajectory_utils import segment_trajectory, downsample_trajectory
-
+from run_baseline_comparison import compute_dtw_matrix
 
 RANDOM_SEED = getattr(config, "RANDOM_SEED", 42)
 

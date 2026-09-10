@@ -220,7 +220,10 @@ def main():
     out_dir = repo_root / "results"
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    out_path = out_dir / "percentile_sweep.csv"
+    out_path = (
+    out_dir
+    / f"percentile_sweep_{config.DATASET_SHORT}.csv"
+    )
 
     results_df.to_csv(
         out_path,

@@ -35,15 +35,9 @@ import pandas as pd
 # ---------------------------------------------------------------------
 
 repo_root = Path(__file__).resolve().parent.parent
-poses_dir = repo_root / config.POSES_DIR
 sys.path.insert(0, str(repo_root))
-
-
-# ---------------------------------------------------------------------
-# Project imports
-# ---------------------------------------------------------------------
-
 import config
+poses_dir = repo_root / config.POSES_DIR
 
 from core.trajectory_utils import load_trajectory
 from loop_closure import LoopClosureDetector
