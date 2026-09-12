@@ -47,7 +47,8 @@ STRIDE = 1.0  # seconds
 
 # ----------------- Detection / evaluation operating points -----------------
 
-PERCENTILE = 68.0  # Match the true positive density (~68% of queries are matches)
+PERCENTILE_UZH = 68.0  # Match the true positive density (~68% of queries are matches)
+PERCENTILE_KITTI = 15.0  # Match the true positive density (~15% of queries are matches)
 SPATIAL_TOLERANCE = 2.0  # meters, primary reported tolerance
 TOLERANCE_SWEEP = [0.5, 1.0, 1.5, 2.0]
 PERCENTILE_SWEEP = [1, 5, 10, 20, 50]
