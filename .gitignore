@@ -1,20 +1,24 @@
+# Raw Datasets, Poses, and ROS Bags
+data/
+*.bag
+*.npy
+*.npz
+store-old/
+
+# Generated artifacts — do not commit
+cache/
+
 # Python
 __pycache__/
 *.py[cod]
+*.egg-info/
+.eggs/
+dist/
+build/
 .venv/
 venv/
+
+# OS / editor
 .DS_Store
-
-# IDE
-.vscode/
 .idea/
-
-# Experiment outputs
-cache/
-
-# Large dataset files
-*.bag
-*.zip
-
-# Local data
-data/
+.vscode/*.tex
