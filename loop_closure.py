@@ -58,9 +58,6 @@ class LoopClosureDetector:
         reference_index: int | None = None,
         num_itermax_gw: int = 1000,
         tol: float = 1e-7,
-        global_scale: float | None = None,
-        scale_aware: bool = True,
-        huber_delta: float = 0.15,
     ):
         self.segment_length = float(segment_length)
         self.fps = float(fps)
@@ -69,18 +66,14 @@ class LoopClosureDetector:
         self.downsample_points = downsample_points
         self.reference_strategy = reference_strategy
         self.reference_index = reference_index
-        self._configured_global_scale = global_scale
-        self.global_scale = global_scale
-        self.scale_aware = bool(scale_aware)
+        self.num_itermax_gw = num_itermax_gw
+        self.tol = tol
 
         self.lpgw = LPGW(
             lambdaa=lambdaa,
             num_itermax_gw=num_itermax_gw,
             tol=tol,
-            global_scale=global_scale,
-            huber_delta=huber_delta,
         )
-    
 
         self.reference_segment = None
         self.embeddings1 = None
@@ -242,26 +235,6 @@ class LoopClosureDetector:
             )
             for seg in segments2
         ]
-
-        if self.scale_aware:
-            if self._configured_global_scale is None:
-                all_segments = processed1 + processed2
-                diameters = [
-                    float(np.max(cdist(seg, seg, metric="euclidean")))
-                    for seg in all_segments
-                ]
-                self.global_scale = float(np.median(diameters))
-            else:
-                self.global_scale = self._configured_global_scale
-
-            if self.global_scale <= 0:
-                raise ValueError("global scale must be positive")
-
-            self.lpgw.global_scale = self.global_scale
-            print(f"Global scale: {self.global_scale:.3f} m")
-        else:
-            self.global_scale = None
-            self.lpgw.global_scale = None
 
         print(
             f"Reference segment: index={self.reference_index}, "
